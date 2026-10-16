@@ -1,0 +1,4 @@
+{
+    "python-envs.defaultEnvManager": "jezdez.conda-code:conda",
+    "python-envs.defaultPackageManager": "jezdez.conda-code:conda"
+}

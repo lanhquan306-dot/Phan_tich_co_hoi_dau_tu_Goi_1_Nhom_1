@@ -1,0 +1,7 @@
+python-telegram-bot[job-queue]>=22,<23
+vnstock>=4.0.8,<5
+openai>=1.50
+python-dotenv>=1.0
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8

@@ -1,0 +1,1965 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Stock Opportunity Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #08101f;
+      --panel: #101a2d;
+      --panel2: #142038;
+      --panel3: #0c1527;
+      --line: #263653;
+      --text: #eef4ff;
+      --muted: #93a3bd;
+      --accent: #5b8cff;
+      --green: #2fd19b;
+      --red: #ff667a;
+      --yellow: #ffcb66;
+      --shadow: 0 16px 44px rgba(0, 0, 0, .28)
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f7fb;
+      --panel: #fff;
+      --panel2: #f8faff;
+      --panel3: #eef3fb;
+      --line: #d8e0ed;
+      --text: #162033;
+      --muted: #61718a;
+      --shadow: 0 12px 30px rgba(20, 45, 80, .12)
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    table {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale
+    }
+
+    .shell {
+      max-width: 1440px;
+      margin: auto;
+      padding: 18px 22px 44px
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(10px);
+      padding: 12px 0
+    }
+
+    .brand {
+      font-weight: 900;
+      letter-spacing: -.4px
+    }
+
+    .brand span {
+      color: var(--accent)
+    }
+
+    .search {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      max-width: 480px;
+      flex: 1
+    }
+
+    .search input {
+      flex: 1;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 13px;
+      text-transform: uppercase;
+      font-size: 14px;
+      outline: none
+    }
+
+    .search .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      padding: 0 16px
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .btn.small {
+      padding: 7px 10px;
+      font-size: 12px
+    }
+
+    .spacer {
+      flex: 1
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow)
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 14px;
+      margin-top: 6px
+    }
+
+    .hero-main,
+    .score-card,
+    .section {
+      padding: 20px
+    }
+
+    .ticker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .ticker h1 {
+      font-size: 34px;
+      margin: 0
+    }
+
+    .company {
+      color: var(--muted)
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      background: var(--panel2)
+    }
+
+    .price {
+      font-size: 30px;
+      font-weight: 900;
+      margin-top: 16px
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .tiny {
+      font-size: 12px
+    }
+
+    .assessment {
+      line-height: 1.55;
+      margin: 14px 0 0
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px
+    }
+
+    .actions a {
+      text-decoration: none
+    }
+
+    .signal {
+      font-size: 24px;
+      font-weight: 950;
+      margin: 5px 0
+    }
+
+    .signal.buy,
+    .up {
+      color: var(--green)
+    }
+
+    .signal.sell,
+    .down {
+      color: var(--red)
+    }
+
+    .signal.hold,
+    .warn {
+      color: var(--yellow)
+    }
+
+    .score-num {
+      font-size: 50px;
+      font-weight: 950;
+      line-height: 1;
+      margin: 8px 0
+    }
+
+    .score-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px
+    }
+
+    .mini-score {
+      padding: 12px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px
+    }
+
+    .mini-score strong {
+      font-size: 24px;
+      line-height: 1
+    }
+
+    .bar {
+      height: 7px;
+      background: var(--panel3);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 7px
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--accent)
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 14px
+    }
+
+    .span12 {
+      grid-column: span 12
+    }
+
+    .span8 {
+      grid-column: span 8
+    }
+
+    .span6 {
+      grid-column: span 6
+    }
+
+    .span4 {
+      grid-column: span 4
+    }
+
+    .section h2 {
+      font-size: 17px;
+      margin: 0 0 14px
+    }
+
+    .section h3 {
+      font-size: 14px;
+      margin: 18px 0 10px
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px
+    }
+
+    .metric {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      min-height: 22px
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 19px;
+      margin-top: 4px
+    }
+
+    .metric .pts {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 5px
+    }
+
+    .metric-note {
+      margin-top: 8px;
+      line-height: 1.35;
+      font-size: 11.5px;
+      color: var(--muted);
+      border-top: 1px dashed var(--line);
+      padding-top: 7px
+    }
+
+    .comment {
+      background: var(--panel3);
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin: 8px 0;
+      color: var(--muted);
+      line-height: 1.5
+    }
+
+    .chart-wrap {
+      height: 560px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #131722
+    }
+
+    .chart-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0
+    }
+
+    .table-wrap {
+      overflow: auto
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      vertical-align: top
+    }
+
+    .table th {
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 700
+    }
+
+    .table td {
+      font-size: 14.5px;
+      line-height: 1.6
+    }
+
+    .lists {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px
+    }
+
+    .listbox {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px
+    }
+
+    .listbox h3 {
+      margin: 0 0 9px;
+      font-size: 13px
+    }
+
+    .listbox ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted)
+    }
+
+    .listbox li {
+      margin: 6px 0;
+      line-height: 1.45
+    }
+
+    .method-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55
+    }
+
+    .notice {
+      border: 1px solid color-mix(in srgb, var(--yellow) 50%, var(--line));
+      background: color-mix(in srgb, var(--yellow) 8%, var(--panel));
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--muted)
+    }
+
+    .backtest-box {
+      min-height: 110px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 13px
+    }
+
+    .bt-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px
+    }
+
+    .bt-metrics>div {
+      padding: 10px;
+      background: var(--panel3);
+      border-radius: 9px
+    }
+
+    .bt-metrics b {
+      display: block;
+      font-size: 18px
+    }
+
+    .foot {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center
+    }
+
+    .chat-toggle {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      width: 52px;
+      height: 52px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: var(--shadow);
+      z-index: 30
+    }
+
+    .chat {
+      position: fixed;
+      right: 22px;
+      top: 86px;
+      bottom: 84px;
+      width: 380px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      z-index: 29;
+      display: none;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .chat.open {
+      display: flex
+    }
+
+    .chat-head {
+      padding: 14px 15px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 900
+    }
+
+    .chat-body {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px
+    }
+
+    .msg {
+      max-width: 92%;
+      padding: 9px 11px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      line-height: 1.45
+    }
+
+    .msg.bot {
+      background: var(--panel2);
+      align-self: flex-start
+    }
+
+    .msg.user {
+      background: var(--accent);
+      color: #fff;
+      align-self: flex-end
+    }
+
+    .chat-form {
+      display: flex;
+      gap: 7px;
+      padding: 10px;
+      border-top: 1px solid var(--line)
+    }
+
+    .chat-form input {
+      flex: 1;
+      min-width: 0;
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px
+    }
+
+    .profile-item {
+      padding: 12px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 11px
+    }
+
+    .profile-item small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 5px
+    }
+
+    .financial-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 22px 0 14px
+    }
+
+    .financial-heading h3 {
+      margin: 0 0 5px;
+      font-size: 16px
+    }
+
+    .financial-heading p {
+      margin: 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55
+    }
+
+    .financial-period {
+      flex: none;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    .financial-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px
+    }
+
+    .financial-kpi {
+      min-width: 0;
+      padding: 13px 15px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 12px
+    }
+
+    .financial-kpi-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .financial-kpi-value {
+      display: block;
+      margin-top: 7px;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -.4px
+    }
+
+    .financial-kpi-note {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px
+    }
+
+    .financial-charts-grid {
+      margin: 0 0 20px
+    }
+
+    .financial-chart-card {
+      min-width: 0;
+      padding: 16px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px
+    }
+
+    .financial-chart-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 43px;
+      margin-bottom: 10px
+    }
+
+    .financial-chart-title {
+      font-size: 13px;
+      font-weight: 700
+    }
+
+    .financial-chart-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4
+    }
+
+    .financial-chart-badge {
+      flex: none;
+      padding: 4px 7px;
+      border-radius: 7px;
+      background: var(--panel3);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700
+    }
+
+    .financial-chart-area {
+      height: 250px;
+      position: relative
+    }
+
+    .chart-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55
+    }
+
+    .financial-empty {
+      margin: 0 0 12px
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid var(--line);
+      margin-top: 18px;
+      position: sticky;
+      top: 58px;
+      z-index: 14;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(10px);
+      padding: 6px 0
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all .2s ease
+    }
+
+    .tab-btn:hover {
+      color: var(--text)
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent)
+    }
+
+    .tab-pane {
+      display: none
+    }
+
+    .tab-pane.active {
+      display: block
+    }
+
+    .hero-landing {
+      position: relative;
+      min-height: calc(100vh - 120px);
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 56px;
+      background-color: #08101f;
+      background-image: linear-gradient(135deg, rgba(8, 16, 31, 0.72) 0%, rgba(8, 16, 31, 0.25) 55%, rgba(8, 16, 31, 0.78) 100%);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .hero-landing-body {
+      max-width: 620px;
+      margin-top: 30px;
+    }
+
+    .hero-landing-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #ffcb66;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .hero-landing-tag::before {
+      content: "";
+      display: inline-block;
+      width: 26px;
+      height: 2px;
+      background: #ffcb66;
+    }
+
+    .hero-landing-title {
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin: 0 0 16px;
+      color: #ffffff;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .hero-landing-title span {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .hero-landing-desc {
+      color: #cbd5e1;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+
+    .hero-search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(16, 26, 45, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      padding: 6px 8px 6px 20px;
+      max-width: 500px;
+    }
+
+    .hero-search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .hero-search-box input::placeholder {
+      color: #94a3b8;
+    }
+
+    .hero-search-btn {
+      background: #d8ff3d;
+      color: #0b1320;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-weight: 800;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-market-card {
+      position: absolute;
+      top: 48px;
+      right: 56px;
+      background: rgba(14, 23, 42, 0.55);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .market-info-label {
+      font-size: 11px;
+      color: #93a3bd;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .market-info-val {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .market-info-change {
+      color: #2fd19b;
+      font-size: 12.5px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    .hero-features {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    .hero-feat-item {
+      background: rgba(14, 23, 42, 0.55);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-feat-icon {
+      font-size: 20px;
+    }
+
+    .hero-feat-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .hero-feat-sub {
+      font-size: 11.5px;
+      color: #93a3bd;
+    }
+
+    @media(max-width:1050px) {
+      .hero {
+        grid-template-columns: 1fr
+      }
+
+      .span8,
+      .span6,
+      .span4 {
+        grid-column: span 12
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .lists {
+        grid-template-columns: 1fr
+      }
+
+      .profile-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .bt-metrics {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .chart-wrap {
+        height: 460px
+      }
+    }
+
+    @media(max-width:640px) {
+      .shell {
+        padding: 10px
+      }
+
+      .topbar {
+        flex-wrap: wrap
+      }
+
+      .brand {
+        width: 100%
+      }
+
+      .search {
+        order: 3;
+        max-width: none;
+        width: 100%
+      }
+
+      .metrics,
+      .profile-grid {
+        grid-template-columns: 1fr
+      }
+
+      .score-pair {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .chat {
+        right: 8px;
+        left: 8px;
+        width: auto;
+        top: 72px
+      }
+
+      .chart-wrap {
+        height: 400px
+      }
+
+      .hero-main,
+      .score-card,
+      .section {
+        padding: 14px
+      }
+
+      .bt-metrics {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .tab-btn {
+        padding: 8px 10px;
+        font-size: 13px
+      }
+
+      .financial-heading {
+        flex-direction: column;
+        gap: 9px
+      }
+
+      .financial-kpis {
+        grid-template-columns: 1fr
+      }
+
+      .hero-landing {
+        padding: 24px 20px
+      }
+
+      .hero-market-card {
+        position: static;
+        margin-bottom: 20px
+      }
+    }
+
+    /* LIGHT MODE - LANDING PAGE */
+    [data-theme="light"] .hero-landing {
+      background-color: #ffffff;
+      background-image: linear-gradient(135deg, #ffffff 0%, #f0f5ff 55%, #e8efff 100%);
+      border: 1px solid #d8e0ed;
+      box-shadow: 0 16px 40px rgba(20, 45, 80, .10);
+    }
+
+    [data-theme="light"] .hero-landing-title,
+    [data-theme="light"] .market-info-val,
+    [data-theme="light"] .hero-feat-title {
+      color: #162033;
+    }
+
+    [data-theme="light"] .hero-landing-desc,
+    [data-theme="light"] .market-info-label,
+    [data-theme="light"] .hero-feat-sub {
+      color: #61718a;
+    }
+
+    [data-theme="light"] .hero-landing-tag {
+      color: #4263eb;
+    }
+
+    [data-theme="light"] .hero-landing-tag::before {
+      background: #4263eb;
+    }
+
+    [data-theme="light"] .hero-search-box {
+      background: #ffffff;
+      border: 1px solid #d8e0ed;
+    }
+
+    [data-theme="light"] .hero-search-box input {
+      color: #162033;
+    }
+
+    [data-theme="light"] .hero-search-box input::placeholder {
+      color: #8290a5;
+    }
+
+    [data-theme="light"] .hero-market-card,
+    [data-theme="light"] .hero-feat-item {
+      background: #f4f7fb;
+      border: 1px solid #d8e0ed;
+    }
+
+    [data-theme="light"] .market-info-change {
+      color: #15803d;
+    }
+
+    [data-theme="light"] .hero-search-btn {
+      background: #4263eb;
+      color: #ffffff;
+    }
+
+    [data-theme="light"] .hero-feat-icon {
+      color: #162033;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">Stock <span>Opportunity</span> Analyzer</div>
+      <div class="search" id="topSearchBox">
+        <input id="symbolInput" placeholder="Nhập mã, VD: FPT, MWG, VCB" maxlength="10">
+        <button class="btn primary" id="analyzeBtn">Phân tích</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="themeBtn">Giao diện</button>
+    </div>
+    <main id="app"></main>
+    <div class="foot">Công cụ hỗ trợ phân tích học thuật/tham khảo. Không bảo đảm lợi nhuận và không thay thế quyết định
+      đầu tư của người dùng.</div>
+  </div>
+
+  <button class="chat-toggle" id="chatToggle" title="Mở chatbot">AI</button>
+  <aside class="chat" id="chatPanel">
+    <div class="chat-head">Trợ lý phân tích <span id="chatTicker"></span></div>
+    <div class="chat-body" id="chatBody">
+      <div class="msg bot">Bạn có thể hỏi vì sao tín hiệu là BUY/HOLD/SELL, chỉ số nào kéo điểm xuống, RSI có ý nghĩa gì
+        hoặc rủi ro chính của mã đang xem.</div>
+    </div>
+    <div class="chat-form">
+      <input id="chatInput" placeholder="Nhập câu hỏi...">
+      <button class="btn primary" id="chatSend">Gửi</button>
+    </div>
+  </aside>
+
+  <script>
+    const D = __ANALYSIS_JSON__;
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const num = v => v === null || v === undefined || !isFinite(Number(v)) ? null : Number(v);
+    const money = v => num(v) === null ? "—" : Math.round(Number(v)).toLocaleString("vi-VN");
+    const val = (v, u) => { v = num(v); if (v === null) return "—"; if (u === "%") return (v > 0 ? "+" : "") + v.toFixed(1) + "%"; if (u === "x") return v.toFixed(2) + "x"; return money(v) };
+    const tone = v => num(v) === null ? "" : v > 0 ? "up" : v < 0 ? "down" : "";
+    const scoreTone = s => num(s) >= 70 ? "up" : num(s) < 40 ? "down" : "warn";
+    const signalClass = s => s === "BUY" ? "buy" : s === "SELL" ? "sell" : s === "HOLD" ? "hold" : "";
+
+    function go() { const s = $("symbolInput").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, ""); if (s) location.href = "/analysis/" + s }
+    $("analyzeBtn").onclick = go;
+    $("symbolInput").addEventListener("keydown", e => { if (e.key === "Enter") go() });
+    let theme = localStorage.getItem("investment-theme") || "dark"; document.documentElement.dataset.theme = theme;
+    $("themeBtn").onclick = () => { theme = theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = theme; localStorage.setItem("investment-theme", theme) };
+
+    function list(title, arr, klass = "") { return `<div class="listbox"><h3 class="${klass}">${title}</h3><ul>${(arr && arr.length ? arr : ["Chưa có mục nổi bật từ dữ liệu hiện có."]).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` }
+    function comments(items) { return (items || []).map(x => `<div class="comment">${esc(x)}</div>`).join("") || '<div class="muted tiny">Chưa có nhận định.</div>' }
+    function histRows(h, kind) { if (!h || !h.length) return '<tr><td colspan="8">Chưa đủ dữ liệu để lập bảng 3–5 năm.</td></tr>'; return [...h].reverse().map(r => `<tr><td><b>${r.year}</b></td><td>${money(r.revenue)}</td><td>${val(r.revenue_growth, "%")}</td><td>${money(r.npat)}</td><td>${val(r.profit_growth, "%")}</td><td>${val(r.roe, "%")}</td><td>${val(r.roa, "%")}</td><td>${kind === "regular" ? val(r.de, "x") : "Không áp dụng"}</td></tr>`).join("") }
+    function sourceRows(rows) { return (rows || []).map(x => `<tr><td><b>${esc(x.data)}</b></td><td>${esc(x.source)}</td><td>${esc(x.period)}</td><td>${esc(x.retrieved_at)}</td><td>${esc(x.note)}</td></tr>`).join("") || '<tr><td colspan="5">Chưa có bảng nguồn dữ liệu.</td></tr>' }
+
+    function newsRows(rows) {
+      if (!rows || !rows.length) return '<div class="muted">Chưa lấy được tin doanh nghiệp từ nguồn hiện có.</div>';
+      return rows.map(n => {
+        const articleUrl = String(n.url || "").startsWith("http") ? n.url : `https://www.google.com/search?q=${encodeURIComponent((D.symbol || "") + " " + n.title)}`;
+        const sent = String(n.sentiment || "").trim();
+        let sentClass = "warn";
+        let sentColor = "var(--yellow)";
+        if (sent === "Tích cực") { sentClass = "up"; sentColor = "var(--green)"; }
+        else if (sent === "Tiêu cực") { sentClass = "down"; sentColor = "var(--red)"; }
+
+        return `
+      <div style="padding:14px 0; border-bottom:1px solid var(--line);">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+          <a href="${esc(articleUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--text); text-decoration:none; font-weight:700; font-size:15px; line-height:1.4;">${esc(n.title)} ↗</a>
+          <div style="color:var(--muted); font-size:12px; flex-shrink:0;">${esc(n.publish_time || "N/A")} · ${esc(n.source || n.provider || "VNStock Reference")}</div>
+        </div>
+        ${n.summary ? `<div style="margin-top:8px;"><b style="font-size:12.5px; color:var(--text);">Tóm tắt nội dung</b><div style="color:var(--muted); font-size:13.5px; line-height:1.5; margin-top:4px;">${esc(n.summary)}</div></div>` : ''}
+        ${n.sentiment ? `<div style="margin-top:10px;"><b style="font-size:12.5px; color:var(--text);">Phân tích cảm xúc</b><div style="margin-top:4px;"><span class="${sentClass}" style="font-weight:700; font-size:13.5px; color:${sentColor};">${esc(n.sentiment)}</span></div>${n.sentiment_reason ? `<div style="color:var(--muted); font-size:13.5px; line-height:1.5; margin-top:3px;">${esc(n.sentiment_reason)}</div>` : ''}</div>` : ''}
+      </div>`;
+      }).join("");
+    }
+
+    function groupMetrics(keys, c) {
+      return (keys || []).map(k => {
+        const x = c[k];
+        if (!x) return "";
+        const noteText = x.note || "";
+        const noteHtml = noteText ? `<div class="metric-note">${esc(noteText)}</div>` : "";
+        return `
+      <div class="metric">
+        <div>
+          <small>${esc(x.name)}</small>
+          <strong class="${tone(x.value)}">${val(x.value, x.unit)}</strong>
+          <div class="pts">Điểm ${x.points === null ? "N/A" : Number(x.points).toFixed(1)} / ${Number(x.weight).toFixed(0)}</div>
+        </div>
+        ${noteHtml}
+      </div>`;
+      }).join("");
+    }
+
+    function switchTab(id, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const target = $(id);
+      if (target) target.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    function render() {
+      if (!D || !D.symbol) {
+        const topBar = $("topSearchBox");
+        if (topBar) topBar.style.display = "none";
+
+        $("app").innerHTML = `
+      <div class="hero-landing">
+        <div class="hero-market-card">
+          <div>
+            <div class="market-info-label">VNINDEX</div>
+            <div class="market-info-val">1,719.42 <span class="market-info-change">▲ +0.96%</span></div>
+            <div class="muted tiny" style="margin-top:2px;">Cập nhật phiên gần nhất · HOSE</div>
+          </div>
+          <div style="font-size:24px;">📈</div>
+        </div>
+
+        <div class="hero-landing-body">
+          <div class="hero-landing-tag">STOCK OPPORTUNITY ANALYZER</div>
+          <h1 class="hero-landing-title">Đọc thị trường.<br><span>Hiểu giá trị.</span></h1>
+          <p class="hero-landing-desc">
+            Kết hợp dữ liệu tài chính vĩ mô, định giá định lượng và góc nhìn phân tích kỹ thuật trong cùng một không gian.
+          </p>
+
+          <div class="hero-search-box">
+            <span style="margin-right:8px; opacity:0.6;">🔍</span>
+            <input id="landingSymbolInput" placeholder="Nhập mã, VD: FPT, MWG, VCB..." maxlength="10">
+            <button class="hero-search-btn" id="landingAnalyzeBtn">
+              <span>→</span> Phân tích
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-features">
+          <div class="hero-feat-item">
+            <span class="hero-feat-icon">📊</span>
+            <div>
+              <div class="hero-feat-title">Dữ liệu thị trường</div>
+              <div class="hero-feat-sub">Cập nhật theo thời gian thực</div>
+            </div>
+          </div>
+          <div class="hero-feat-item">
+            <span class="hero-feat-icon">📑</span>
+            <div>
+              <div class="hero-feat-title">Phân tích chuyên sâu</div>
+              <div class="hero-feat-sub">Đa chiều · Khách quan</div>
+            </div>
+          </div>
+          <div class="hero-feat-item">
+            <span class="hero-feat-icon">💡</span>
+            <div>
+              <div class="hero-feat-title">Cơ hội đầu tư</div>
+              <div class="hero-feat-sub">Từ dữ liệu đến quyết định</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+        const landBtn = $("landingAnalyzeBtn");
+        const landInp = $("landingSymbolInput");
+        const triggerGo = () => {
+          const s = landInp.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+          if (s) location.href = "/analysis/" + s;
+        };
+        if (landBtn) landBtn.onclick = triggerGo;
+        if (landInp) landInp.addEventListener("keydown", e => { if (e.key === "Enter") triggerGo(); });
+        return;
+      }
+
+      const topBar = $("topSearchBox");
+      if (topBar) topBar.style.display = "flex";
+
+      $("symbolInput").value = D.symbol;
+      $("chatTicker").textContent = "· " + D.symbol;
+      const f = D.fundamental || {}, t = D.technical || {}, s = D.score || {}, sg = D.signal || {}, c = f.criteria || {}, g = f.groups || {}, m = D.methodology || {}, ci = D.company_info || {};
+      const webVal = ci.website || "";
+      const webHref = webVal.startsWith("http") ? webVal : ("https://" + webVal);
+      const webLink = webVal ? (`<a href="${esc(webHref)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent,#2962ff);text-decoration:underline">${esc(webVal)}</a>`) : "N/A";
+
+      $("app").innerHTML = `
+  <section class="hero" id="overview">
+    <div class="card hero-main">
+      <div class="ticker">
+        <h1>${esc(D.symbol)}</h1>
+        <span class="company">${esc(D.company_name || "Doanh nghiệp niêm yết")}</span>
+        <span class="pill">${esc(D.exchange || "N/A")}</span>
+        ${(D.industry || f.company_type_label) ? `<span class="pill">${esc(D.industry || f.company_type_label)}</span>` : ""}
+      </div>
+      <div class="price">${money(t.close)} <span class="${tone(t.change_pct)}" style="font-size:14px">${num(t.change_pct) === null ? "" : (t.change_pct > 0 ? "+" : "") + Number(t.change_pct).toFixed(2) + "%"}</span></div>
+      <div class="muted tiny">Giá gần nhất: ${esc(t.date || "N/A")} · Nguồn giá: ${esc(D.price_source || "N/A")} · Kỳ BCTC: ${esc(f.latest_period || "N/A")}</div>
+      <p class="assessment">${esc(D.assessment)}</p>
+      <div class="actions">
+        <a class="btn primary" href="/report/${encodeURIComponent(D.symbol)}.pdf">Xuất báo cáo PDF</a>
+      </div>
+    </div>
+    <div class="card score-card">
+      <div class="muted">Tín hiệu đầu tư</div>
+      <div class="signal ${signalClass(sg.code)}">${esc(sg.label)}</div>
+      <div class="score-num ${scoreTone(s.score)}">${s.score === null ? "N/A" : Number(s.score).toFixed(1)}<span style="font-size:18px">/100</span></div>
+      <div class="muted">Mức rủi ro: <b>${esc(D.risk_level)}</b></div>
+      <div class="score-pair">
+        <div class="mini-score"><span class="muted tiny">Cơ bản · 60%</span><strong>${s.fundamental && s.fundamental.score !== null ? Number(s.fundamental.score).toFixed(0) : "N/A"}</strong><div class="bar"><i style="width:${Math.max(0, Math.min(100, num(s.fundamental && s.fundamental.score) || 0))}%"></i></div></div>
+        <div class="mini-score"><span class="muted tiny">Kỹ thuật · 40%</span><strong>${s.technical && s.technical.score !== null ? Number(s.technical.score).toFixed(0) : "N/A"}</strong><div class="bar"><i style="width:${Math.max(0, Math.min(100, num(s.technical && s.technical.score) || 0))}%"></i></div></div>
+      </div>
+      <div style="margin-top:13px" class="tiny muted">Độ phủ dữ liệu: ${Number(s.coverage_pct || 0).toFixed(1)}%</div>
+      <div class="bar"><i style="width:${Math.min(100, Number(s.coverage_pct || 0))}%"></i></div>
+      <div class="comment" style="margin-top:13px">${esc(sg.reason)}</div>
+      ${Array.isArray(sg.buy_checks) ? `<ul class="muted tiny" style="margin:8px 0 0;padding-left:18px">${sg.buy_checks.map(c => `<li class="${c.passed ? "up" : "down"}">${c.passed ? "Đạt" : "Chưa đạt"}: ${esc(c.condition)}</li>`).join("")}</ul>` : ""}
+    </div>
+  </section>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('tab-overview', this)">📊 Phân tích & Tín hiệu</button>
+    <button class="tab-btn" onclick="switchTab('tab-testing', this)">🧪 Kiểm thử & Backtest</button>
+    <button class="tab-btn" onclick="switchTab('tab-methodology', this)">📐 Phương pháp luận & Bảng tính điểm</button>
+  </div>
+
+  <!-- TAB 1: PHÂN TÍCH & TÍN HIỆU -->
+  <div id="tab-overview" class="tab-pane active">
+    <div class="grid">
+      <!-- 1. THÔNG TIN DOANH NGHIỆP -->
+      <section class="card section span12" id="company">
+        <h2>1. Thông tin doanh nghiệp</h2>
+        <div class="profile-grid">
+          <div class="profile-item"><small>Tên đầy đủ</small><b>${esc(ci.company_name || D.company_name || "N/A")}</b></div>
+          <div class="profile-item"><small>Ngành</small><b>${esc(ci.industry || D.industry || "N/A")}</b></div>
+          <div class="profile-item"><small>Ngày niêm yết</small><b>${esc(ci.listing_date || "N/A")}</b></div>
+          <div class="profile-item"><small>Vốn hóa ước tính</small><b>${ci.market_cap ? money(ci.market_cap) + " VND" : "N/A"}</b></div>
+          <div class="profile-item"><small>Cổ phiếu lưu hành</small><b>${ci.issued_share ? money(ci.issued_share) : "N/A"}</b></div>
+          <div class="profile-item"><small>Sàn</small><b>${esc(ci.exchange || D.exchange || "N/A")}</b></div>
+          <div class="profile-item"><small>Website</small><b>${webLink}</b></div>
+          <div class="profile-item"><small>Nguồn hồ sơ</small><b>${esc(ci.source || "VNStock Reference")}</b></div>
+        </div>
+        <div class="notice" style="margin-top:12px"><b>Phân loại chấm điểm:</b> ${esc(f.company_type_label)}. ${esc(m.industry_rule || "")}</div>
+      </section>
+
+      <!-- 2. PHÂN TÍCH TÀI CHÍNH CƠ BẢN -->
+      <section class="card section span12" id="fundamental">
+        <h2>2. Phân tích tài chính cơ bản</h2>
+        <p class="muted tiny">Đánh giá theo 3 nhóm: Tăng trưởng, Khả năng sinh lời & Đòn bẩy, và Định giá.</p>
+        
+        <h3>Tăng trưởng</h3>
+        <div class="metrics">${groupMetrics(g.growth, c)}</div>
+        ${comments(f.comments && f.comments.growth)}
+
+        <h3 style="margin-top:20px;">Khả năng sinh lời và đòn bẩy</h3>
+        <div class="metrics">${groupMetrics(g.profitability_leverage, c)}</div>
+        ${comments(f.comments && f.comments.profitability_leverage)}
+
+        <h3 style="margin-top:20px;">Định giá</h3>
+        <div class="metrics">${groupMetrics(g.valuation, c)}</div>
+        ${comments(f.comments && f.comments.valuation)}
+        
+        <div class="financial-heading">
+          <div>
+            <h3>Xu hướng tài chính</h3>
+            <p>Theo dõi doanh thu, lợi nhuận và hiệu quả sử dụng vốn qua các năm. Di chuột lên biểu đồ để xem số liệu chi tiết.</p>
+          </div>
+          <span class="financial-period">DỮ LIỆU LỊCH SỬ</span>
+        </div>
+        <div class="financial-empty notice" id="financialDataEmpty" hidden>Chưa có dữ liệu lịch sử để hiển thị biểu đồ tài chính.</div>
+        <div class="financial-kpis" id="financialHighlights" aria-label="Tóm tắt kết quả tài chính">
+          <div class="financial-kpi">
+            <span class="financial-kpi-label">Doanh thu gần nhất <span>↗</span></span>
+            <strong class="financial-kpi-value" id="financialRevenue">—</strong>
+            <span class="financial-kpi-note" id="financialRevenueNote">Tỷ VNĐ</span>
+          </div>
+          <div class="financial-kpi">
+            <span class="financial-kpi-label">Lợi nhuận sau thuế <span>◈</span></span>
+            <strong class="financial-kpi-value" id="financialProfit">—</strong>
+            <span class="financial-kpi-note" id="financialProfitNote">Tỷ VNĐ</span>
+          </div>
+          <div class="financial-kpi">
+            <span class="financial-kpi-label">ROE gần nhất <span>%</span></span>
+            <strong class="financial-kpi-value" id="financialRoe">—</strong>
+            <span class="financial-kpi-note" id="financialYear">Kết quả năm gần nhất</span>
+          </div>
+        </div>
+        <div class="grid financial-charts-grid" id="financialCharts">
+          <div class="span6">
+            <div class="financial-chart-card">
+              <div class="financial-chart-head">
+                <div>
+                  <div class="financial-chart-title">Doanh thu & lợi nhuận sau thuế</div>
+                  <div class="financial-chart-subtitle">Đơn vị: tỷ VNĐ · so sánh theo năm</div>
+                </div>
+                <span class="financial-chart-badge">KẾT QUẢ KD</span>
+              </div>
+              <div class="financial-chart-area">
+                <canvas id="chartFinancialRevProfit" aria-label="Biểu đồ doanh thu và lợi nhuận sau thuế" role="img"></canvas>
+                <div class="chart-empty" id="chartFinancialRevProfitEmpty" hidden></div>
+              </div>
+            </div>
+          </div>
+          <div class="span6">
+            <div class="financial-chart-card">
+              <div class="financial-chart-head">
+                <div>
+                  <div class="financial-chart-title">Sinh lời & đòn bẩy tài chính</div>
+                  <div class="financial-chart-subtitle">ROE, ROA (%) và D/E (lần)</div>
+                </div>
+                <span class="financial-chart-badge">HIỆU QUẢ VỐN</span>
+              </div>
+              <div class="financial-chart-area">
+                <canvas id="chartFinancialRatios" aria-label="Biểu đồ ROE, ROA và D/E theo năm" role="img"></canvas>
+                <div class="chart-empty" id="chartFinancialRatiosEmpty" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Bảng chi tiết số liệu 3–5 năm</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Năm</th><th>Doanh thu/thu nhập</th><th>Tăng trưởng</th><th>LNST</th><th>Tăng trưởng LNST</th><th>ROE</th><th>ROA</th><th>D/E</th></tr>
+            </thead>
+            <tbody>${histRows(f.history, f.company_type)}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. ĐỊNH GIÁ CHUYÊN SÂU: CHỈ CHẠY KHI TÍN HIỆU L2 LÀ MUA -->
+      <section class="card section span12" id="deep-valuation" style="${D.deep_valuation && D.deep_valuation.status === 'COMPLETED' ? 'border: 1px solid var(--green); background: rgba(47, 209, 155, 0.03);' : ''}">
+        <h2>3. Định giá chuyên sâu · Dự phóng 3 kịch bản</h2>
+        ${D.deep_valuation && D.deep_valuation.status === "COMPLETED" ? `
+          <p class="muted tiny">${esc(D.deep_valuation.model_note)}</p>
+          <div class="profile-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-top:12px">
+            <div class="profile-item"><small>Tín hiệu định giá (tham khảo)</small><b class="${D.deep_valuation.final_signal.includes('BUY') ? 'up' : D.deep_valuation.final_signal.includes('SELL') ? 'down' : 'warn'}" style="display:block;margin:5px 0">${esc(D.deep_valuation.final_signal)}</b><span class="muted tiny">${esc(D.deep_valuation.action_note)}</span></div>
+            <div class="profile-item"><small>Tín hiệu L2 (điều kiện chạy)</small><b class="${signalClass(D.signal.code)}" style="display:block;margin:5px 0">${esc(D.signal.label)}</b><span class="muted tiny">Định giá chỉ chạy khi tín hiệu này là MUA; tín hiệu định giá không ghi đè nó.</span></div>
+            <div class="profile-item"><small>Ngành / ngưỡng upside tối thiểu</small><b style="display:block;margin:5px 0">${esc(D.deep_valuation.industry_type)} · ${Number(D.deep_valuation.industry_minimum_upside_pct).toFixed(0)}%</b><span class="muted tiny">Upside cơ sở: ${Number(D.deep_valuation.base_upside_pct).toFixed(1)}%</span></div>
+          </div>
+          <h3>So sánh 3 kịch bản · giá mục tiêu cuối năm 3</h3>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Kịch bản</th><th>Phương pháp</th><th>Giá mục tiêu</th><th>Upside lũy kế</th><th>CAGR/năm</th><th>Giả định Groq</th></tr></thead>
+              <tbody>
+                ${Object.values(D.deep_valuation.scenarios).map(scenario => `
+                  <tr>
+                    <td><b>${esc(scenario.name)}</b></td>
+                    <td>${esc(scenario.valuation.valuation_method)} · ${Number(scenario.valuation.target_multiplier).toFixed(2)}${esc(scenario.valuation.multiplier_unit)}</td>
+                    <td>${money(scenario.valuation.target_price_y3)} VND</td>
+                    <td class="${scenario.investment_metrics.upside_pct >= 0 ? 'up' : 'down'}">${Number(scenario.investment_metrics.upside_pct).toFixed(1)}%</td>
+                    <td class="${scenario.investment_metrics.cagr_pct >= 0 ? 'up' : 'down'}">${Number(scenario.investment_metrics.cagr_pct).toFixed(1)}%</td>
+                    <td>${esc(scenario.note)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+          <h3>Dự phóng chi tiết · Kịch bản cơ sở</h3>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>${D.deep_valuation.industry_type === "BANK"
+            ? `<tr><th>Năm</th><th>LNST dự phóng</th><th>ROE</th><th>Tỷ lệ giữ lại</th><th>VCSH cuối kỳ</th><th>BVPS</th></tr>`
+            : `<tr><th>Năm</th><th>Doanh thu</th><th>Tăng trưởng</th><th>Biên LNST</th><th>LNST</th><th>EPS dự phóng</th></tr>`}</thead>
+              <tbody>
+                ${['year_1', 'year_2', 'year_3'].map((key, index) => {
+              const item = D.deep_valuation.forecast_projections[key];
+              return D.deep_valuation.industry_type === "BANK"
+                ? `<tr><td><b>Năm ${index + 1} (${item.year})</b></td><td>${money(item.npat)} VND</td><td>${Number(item.roe_pct).toFixed(1)}%</td><td>${Number(item.retention_rate_pct).toFixed(1)}%</td><td>${money(item.equity)} VND</td><td>${money(item.bvps)} VND</td></tr>`
+                : `<tr><td><b>Năm ${index + 1} (${item.year})</b></td><td>${money(item.revenue)} VND</td><td>${Number(item.rev_growth_pct).toFixed(1)}%</td><td>${Number(item.net_margin_pct).toFixed(1)}%</td><td>${money(item.npat)} VND</td><td>${money(item.eps)} VND</td></tr>`;
+            }).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="comment" style="margin-top:12px"><b>Giả định chung:</b> ${esc(D.deep_valuation.assumptions)}</div>
+          <div class="comment"><b>Giới hạn:</b> ${esc(D.deep_valuation.limitations)}</div>
+          ${(D.deep_valuation.warnings || []).map(w => `<div class="comment warn"><b>Lưu ý:</b> ${esc(w)}</div>`).join("")}
+        ` : D.deep_valuation && D.deep_valuation.status === "SKIPPED" ? `
+          <div class="notice">
+            <b>Không chạy định giá chuyên sâu:</b> ${esc(D.deep_valuation.message)}
+          </div>
+          <p class="muted tiny" style="margin-top:10px">Theo quy tắc Gói 1, mục định giá 3 kịch bản chỉ được tính khi tín hiệu vòng 1/L2 là MUA.</p>
+        ` : `
+          <div class="notice">
+            <b>Chưa thể hoàn tất định giá:</b> ${esc(D.deep_valuation && D.deep_valuation.message || "Không nhận được kết quả định giá.")}
+            ${D.deep_valuation && D.deep_valuation.status === "AI_UNAVAILABLE" ? `<div style="margin-top:6px">Thêm GROQ_API_KEY vào file .env rồi khởi động lại ứng dụng để bật tạo kịch bản.</div>` : ""}
+          </div>
+          <p class="muted tiny" style="margin-top:10px">Định giá chỉ chạy khi tín hiệu L2 là MUA. Giá mục tiêu chỉ được tính khi có đủ dữ liệu và giả định kịch bản hợp lệ.</p>
+        `}
+      </section>
+
+      <!-- 4. PHÂN TÍCH KỸ THUẬT -->
+      <section class="card section span12" id="technical">
+        <h2>4. Phân tích kỹ thuật</h2>
+        <div class="grid" style="margin-top:0">
+          <div class="chart-wrap span8">
+            <iframe src="/chart/${encodeURIComponent(D.symbol)}" title="Biểu đồ kỹ thuật ${esc(D.symbol)}"></iframe>
+          </div>
+          <div class="span4">
+            <h3 style="margin-top:0">Tín hiệu kỹ thuật</h3>
+            <div class="metrics" style="grid-template-columns:1fr 1fr">
+              <div class="metric"><small>Xu hướng</small><strong class="${t.trend === 'Tích cực' ? 'up' : t.trend === 'Tiêu cực' ? 'down' : 'warn'}">${esc(t.trend)}</strong></div>
+              <div class="metric"><small>RSI14</small><strong>${val(t.rsi14, "")}</strong></div>
+              <div class="metric"><small>MA20</small><strong>${money(t.ma20)}</strong></div>
+              <div class="metric"><small>MA50</small><strong>${money(t.ma50)}</strong></div>
+              <div class="metric"><small>Khối lượng</small><strong>${val(t.volume, "")}</strong></div>
+              <div class="metric"><small>KL / TB20</small><strong>${num(t.vol_ratio) === null ? "—" : Number(t.vol_ratio).toFixed(2) + "x"}</strong></div>
+            </div>
+            <h3 style="margin-top:14px">Nhận định kỹ thuật</h3>
+            ${comments(t.reasons)}
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. TIN TỨC DOANH NGHIỆP -->
+      <section class="card section span12" id="news">
+        <h2>5. Tin tức doanh nghiệp</h2>
+        <p class="muted tiny">Tin tức dùng làm bối cảnh và kiểm chứng, chưa trực tiếp cộng/trừ vào điểm đầu tư.</p>
+        ${newsRows(D.news)}
+      </section>
+
+      <!-- 6. LUẬN ĐIỂM ĐẦU TƯ VÀ RỦI RO -->
+      <section class="card section span12" id="thesis">
+        <h2>6. Luận điểm đầu tư và rủi ro</h2>
+        <div class="lists">${list("Luận điểm / điểm mạnh", D.strengths, "up")}${list("Điểm yếu / cần theo dõi", D.weaknesses, "warn")}${list("Rủi ro", D.risks, "down")}</div>
+        ${D.missing_data && D.missing_data.length ? `<div class="notice" style="margin-top:12px"><b>Dữ liệu thiếu:</b> ${esc(D.missing_data.join(", "))}</div>` : ""}
+      </section>
+    </div>
+  </div>
+
+  <!-- TAB 2: KIỂM THỬ & BACKTEST -->
+  <div id="tab-testing" class="tab-pane">
+    <div class="grid">
+      <section class="card section span12" id="backtest">
+        <h2>Backtest chiến lược đầu tư</h2>
+       
+<p class="muted tiny">
+  Kiểm định chiến lược trong 1 năm. Tín hiệu tính sau mỗi phiên, khớp ở giá mở cửa phiên kế tiếp;
+  vốn 100 triệu VNĐ, lô 100 cổ phiếu, phí/thuế/trượt giá và giới hạn BCTC theo ngày công bố
+  để tránh look-ahead bias. So sánh với Buy &amp; Hold và VN-Index.
+</p>
+<div class="actions">
+  <button class="btn btn-bt primary" data-m="12">Backtest 1 năm</button>
+</div>
+        <div id="backtestResult" class="backtest-box" style="margin-top:12px"><span class="muted">Chưa chạy backtest.</span></div>
+      </section>
+
+      <section class="card section span12" id="validation">
+        <h2>Kiểm thử & So sánh đối chiếu (Cross-validation)</h2>
+        <p class="muted tiny">So sánh sức mạnh định giá và kỹ thuật của ${esc(D.symbol)} với các cổ phiếu chọn lọc.</p>
+        <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" id="valPeersBtn">👥 So sánh cùng ngành (${esc(D.industry || 'Ngành')})</button>
+          <button class="btn" id="valDefaultBtn">🌐 Nhóm tham chiếu chuẩn (5 mã)</button>
+        </div>
+        <div id="validationResult" class="backtest-box" style="margin-top:12px"><span class="muted">Chưa chạy kiểm thử. Bấm chọn chế độ phía trên để so sánh.</span></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- TAB 3: PHƯƠNG PHÁP LUẬN & BẢNG TÍNH ĐIỂM -->
+  <div id="tab-methodology" class="tab-pane">
+    <div class="grid">
+      <section class="card section span12" id="scoring-calculation">
+        <h2>Phương pháp luận & Bảng tính điểm chi tiết</h2>
+        <div class="profile-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 14px;">
+          <div class="profile-item">
+            <small>Điểm cơ bản (F)</small>
+            <b style="font-size: 20px;">${s.fundamental && s.fundamental.score !== null ? Number(s.fundamental.score).toFixed(1) : "N/A"}/100</b>
+            <span class="muted tiny">Trọng số 60% · Điểm đạt: ${s.fundamental ? s.fundamental.earned_points : "N/A"} / ${s.fundamental ? s.fundamental.available_points : "N/A"}</span>
+          </div>
+          <div class="profile-item">
+            <small>Điểm kỹ thuật (T)</small>
+            <b style="font-size: 20px;">${s.technical && s.technical.score !== null ? Number(s.technical.score).toFixed(1) : "N/A"}/100</b>
+            <span class="muted tiny">Trọng số 40% · Điểm đạt: ${s.technical ? s.technical.earned_points : "N/A"} / ${s.technical ? s.technical.available_points : "N/A"}</span>
+          </div>
+        </div>
+
+        <div class="profile-item" style="margin-bottom: 20px;">
+          <small>Công thức tổng hợp điểm</small>
+          <b style="font-size: 16px; color: var(--accent);">S = 0.6*F + 0.4*T = ${s.score !== null ? Number(s.score).toFixed(1) : "N/A"} / 100</b>
+          <div class="muted tiny" style="margin-top: 4px;">Độ phủ dữ liệu thực tế: ${Number(s.coverage_pct || 0).toFixed(1)}% (ngưỡng phát tín hiệu MUA: ≥ 65%)</div>
+        </div>
+
+        <h3>Bảng bóc tách điểm từng tiêu chí</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nhóm</th>
+                <th>Tiêu chí đánh giá</th>
+                <th>Giá trị thực tế</th>
+                <th>Trọng số tối đa</th>
+                <th>Điểm đạt được</th>
+                <th>Quy tắc chấm & Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(s.components || {}).map(([key, item]) => {
+              const grp = item.group === "growth" ? "Tăng trưởng (F)" :
+                item.group === "profitability_leverage" ? "Sinh lời & Đòn bẩy (F)" :
+                  item.group === "valuation" ? "Định giá (F)" :
+                    item.group === "technical" ? "Kỹ thuật (T)" : "Khác";
+              return `
+                  <tr>
+                    <td><span class="pill" style="font-size: 11px;">${grp}</span></td>
+                    <td><b>${esc(item.name || key)}</b></td>
+                    <td class="${tone(item.value)}">${val(item.value, item.unit)}</td>
+                    <td>${Number(item.weight || 0).toFixed(0)} đ</td>
+                    <td><b class="${item.points !== null && item.points > 0 ? 'up' : ''}">${item.points !== null ? Number(item.points).toFixed(1) : 'N/A'} đ</b></td>
+                    <td class="muted tiny">${esc(item.note || '—')}</td>
+                  </tr>
+                `;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top: 24px;">Nguyên tắc phân bổ & Ra quyết định</h3>
+        <ul class="method-list">
+          <li><b>Quy tắc tín hiệu MUA (BUY):</b> Điểm tổng hợp S ≥ 70, kỹ thuật xác nhận xu hướng (MA20 > MA50 và RSI14 > 50; quy ước nhóm không bắt buộc giá > MA20), phiên gần nhất không giảm giá kèm khối lượng ≥ 1,5 lần TB20 (quy ước nhóm), điểm cơ bản F ≥ 60, không vi phạm cảnh báo rủi ro nghiêm trọng và độ phủ dữ liệu ≥ 65%.</li>
+          <li><b>Quy tắc BÁN (SELL):</b> Điểm tổng hợp S < 40 kèm theo cơ bản hoặc kỹ thuật suy yếu rõ rệt.</li>
+          <li><b>Quy tắc GIỮ (HOLD):</b> Điểm S nằm trong khoảng 40 – 70 hoặc các tín hiệu cơ bản và kỹ thuật chưa đồng thuận. Kỹ thuật trung tính được xem là chưa xác nhận xu hướng, nên S ≥ 70 vẫn là GIỮ (quy ước nhóm cho trường hợp mục 5.1 chưa nêu).</li>
+          <li><b>Đặc thù nhóm ngành tài chính:</b> Ngân hàng, Chứng khoán, Bảo hiểm không áp dụng tiêu chí D/E; 7 điểm trọng số của D/E được tự động tái phân bổ vào nhóm Sinh lời và Định giá.</li>
+        </ul>
+      </section>
+
+      <section class="card section span12" id="sources">
+        <h2>Bảng nguồn dữ liệu và khả năng kiểm chứng</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Dữ liệu</th><th>Nguồn</th><th>Kỳ / ngày dữ liệu</th><th>Ngày lấy</th><th>Ghi chú</th></tr>
+            </thead>
+            <tbody>${sourceRows(D.data_sources)}</tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+  `;
+
+      setupBacktest();
+      setupValidation();
+      try {
+        initFinancialCharts();
+      } catch (e) {
+        console.warn("Chưa tải được biểu đồ:", e);
+      }
+    }
+
+    function initFinancialCharts() {
+      const history = D && D.fundamental && D.fundamental.history;
+      if (!history || !history.length) {
+        const emptyNotice = document.getElementById("financialDataEmpty");
+        const hl = document.getElementById("financialHighlights");
+        const fc = document.getElementById("financialCharts");
+        if (emptyNotice) emptyNotice.hidden = false;
+        if (hl) hl.hidden = true;
+        if (fc) fc.hidden = true;
+        return;
+      }
+      const hist = [...D.fundamental.history].sort((a, b) => a.year - b.year);
+      const latest = hist[hist.length - 1];
+      const labels = hist.map(x => x.year);
+      const revData = hist.map(x => num(x.revenue) === null ? null : x.revenue / 1e9);
+      const profitData = hist.map(x => num(x.npat) === null ? null : x.npat / 1e9);
+      const roeData = hist.map(x => num(x.roe) === null ? null : x.roe);
+      const roaData = hist.map(x => num(x.roa) === null ? null : x.roa);
+      const deData = hist.map(x => num(x.de) === null ? null : x.de);
+      const formatBillions = value => num(value) === null ? "—" : (value / 1e9).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " tỷ";
+      const elRev = document.getElementById("financialRevenue");
+      const elProfit = document.getElementById("financialProfit");
+      const elRoe = document.getElementById("financialRoe");
+      const elYear = document.getElementById("financialYear");
+      const elRevNote = document.getElementById("financialRevenueNote");
+      const elProfitNote = document.getElementById("financialProfitNote");
+
+      if (elRev) elRev.textContent = formatBillions(latest.revenue);
+      if (elProfit) elProfit.textContent = formatBillions(latest.npat);
+      if (elRoe) elRoe.textContent = val(latest.roe, "%");
+      if (elYear) elYear.textContent = "Kết quả năm " + latest.year;
+      if (elRevNote) elRevNote.textContent = "Năm " + latest.year + (num(latest.revenue_growth) === null ? "" : " · tăng trưởng " + val(latest.revenue_growth, "%"));
+      if (elProfitNote) elProfitNote.textContent = "Năm " + latest.year + (num(latest.profit_growth) === null ? "" : " · tăng trưởng " + val(latest.profit_growth, "%"));
+
+      const isDark = document.documentElement.dataset.theme !== "light";
+      const textColor = isDark ? "#93a3bd" : "#61718a";
+      const gridColor = isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)";
+
+      if (typeof Chart === "undefined") {
+        ["chartFinancialRevProfit", "chartFinancialRatios"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.hidden = true;
+          const empty = document.getElementById(id + "Empty");
+          if (empty) {
+            empty.textContent = "Không thể tải thư viện biểu đồ. Vui lòng kiểm tra kết nối và tải lại trang.";
+            empty.hidden = false;
+          }
+        });
+        return;
+      }
+
+      const ctx1 = document.getElementById("chartFinancialRevProfit");
+      if (ctx1) {
+        new Chart(ctx1, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              { label: "Doanh thu", data: revData, backgroundColor: "rgba(91, 140, 255, 0.78)", borderColor: "#5b8cff", borderWidth: 1, borderRadius: 6, maxBarThickness: 34 },
+              { label: "LNST", data: profitData, backgroundColor: "rgba(47, 209, 155, 0.82)", borderColor: "#2fd19b", borderWidth: 1, borderRadius: 6, maxBarThickness: 34 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "bottom", labels: { color: textColor, usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 16, font: { size: 11 } } },
+              tooltip: { callbacks: { label: context => " " + context.dataset.label + ": " + Number(context.parsed.y).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " tỷ VNĐ" } }
+            },
+            scales: {
+              x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false }, border: { display: false } },
+              y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 }, callback: value => Number(value).toLocaleString("vi-VN") }, grid: { color: gridColor }, border: { display: false } }
+            }
+          }
+        });
+      }
+
+      const ctx2 = document.getElementById("chartFinancialRatios");
+      if (ctx2) {
+        const datasets = [
+          { label: "ROE (%)", data: roeData, borderColor: "#2fd19b", backgroundColor: "#2fd19b", pointBackgroundColor: "#2fd19b", pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, tension: 0.3, spanGaps: true, yAxisID: "y" },
+          { label: "ROA (%)", data: roaData, borderColor: "#5b8cff", backgroundColor: "#5b8cff", pointBackgroundColor: "#5b8cff", pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, tension: 0.3, spanGaps: true, yAxisID: "y" }
+        ];
+        if (D.fundamental.company_type === "regular") {
+          datasets.push({ label: "D/E (lần)", data: deData, borderColor: "#ffcb66", backgroundColor: "#ffcb66", pointBackgroundColor: "#ffcb66", pointRadius: 3, pointHoverRadius: 5, borderDash: [5, 4], borderWidth: 2, tension: 0.3, spanGaps: true, yAxisID: "y1" });
+        }
+        new Chart(ctx2, {
+          type: "line",
+          data: { labels: labels, datasets: datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "bottom", labels: { color: textColor, usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 16, font: { size: 11 } } },
+              tooltip: { callbacks: { label: context => " " + context.dataset.label + ": " + (context.dataset.yAxisID === "y1" ? Number(context.parsed.y).toFixed(2) + " lần" : Number(context.parsed.y).toFixed(1) + "%") } }
+            },
+            scales: {
+              x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false }, border: { display: false } },
+              y: { ticks: { color: textColor, font: { size: 10 }, callback: v => v + "%" }, grid: { color: gridColor }, border: { display: false } },
+              y1: { display: D.fundamental.company_type === "regular", position: "right", ticks: { color: textColor, font: { size: 10 }, callback: v => v + "x" }, grid: { display: false }, border: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    function setupBacktest() {
+      if (!D || !D.symbol) return;
+      document.querySelectorAll("[data-m]").forEach(b => {
+        b.onclick = () => {
+          document.querySelectorAll("[data-m]").forEach(btn => btn.classList.remove("primary"));
+          b.classList.add("primary");
+          runBacktest(Number(b.dataset.m));
+        };
+      });
+    }
+
+    async function runBacktest(months) {
+      const box = $("backtestResult");
+      if (!box) return;
+      if (Number(months) !== 12) {
+        box.innerHTML = `<span class="down">Chỉ hỗ trợ backtest 1 năm.</span>`;
+        return;
+      }
+      const label = "1 năm";
+      box.innerHTML = `<span class="muted">Đang chạy backtest ${label}...</span>`;
+      try {
+        const r = await fetch(`/api/backtest/${encodeURIComponent(D.symbol)}?months=${months}`);
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.message || j.error || "Backtest lỗi");
+        const fmt = (v, unit) => v === null || v === undefined ? "N/A"
+          : unit === "VND" ? `${money(v)} VNĐ` : unit === "%" ? `${Number(v).toFixed(2)}%` : esc(String(v));
+        const summaryRows = (j.summary || []).map(m => `
+          <tr><td>${esc(m.metric)}</td><td>${fmt(m.stockinsight, m.unit)}</td><td>${fmt(m.buy_hold, m.unit)}</td><td>${fmt(m.vnindex, m.unit)}</td></tr>`).join("");
+        const trades = Array.isArray(j.trade_log) ? j.trade_log : [];
+        const tradeRows = trades.length ? trades.map(t => `
+          <tr><td>${esc(t.entry_date || "—")}</td><td>${money(t.entry_price)} VNĐ</td><td>${esc(t.exit_date || "—")}</td>
+          <td>${money(t.exit_price)} VNĐ</td><td>${t.quantity ?? "—"}</td><td class="${tone(t.return_pct)}">${val(t.return_pct, "%")}</td></tr>`).join("")
+          : `<tr><td colspan="6" class="muted">Chưa có giao dịch hoàn tất trong kỳ.</td></tr>`;
+        const orders = Array.isArray(j.orders) ? j.orders : [];
+        const orderRows = orders.length ? orders.map(o => `
+          <tr><td>${esc(o.signal_date)}</td><td>${esc(o.side)}</td><td>${esc(o.execution_date)}</td><td>${money(o.execution_price)}</td>
+          <td>${o.quantity}</td><td>${money(o.commission)}</td><td>${money(o.sell_tax)}</td><td class="${tone(o.net_cash_flow)}">${money(o.net_cash_flow)}</td><td>${money(o.cash_after)}</td></tr>`).join("")
+          : `<tr><td colspan="9" class="muted">Không có lệnh nào được thực thi.</td></tr>`;
+        const notable = (j.signal_log || []).filter(e => !["NO_ORDER", "NO_ORDER_INSUFFICIENT_DATA"].includes(e.status));
+        const signalRows = notable.length ? notable.map(e => `
+          <tr><td>${esc(e.signal_date)}</td><td>${esc(e.signal)}</td><td>${e.score ?? "N/A"}</td><td>${esc(e.execution_date || "—")}</td><td>${esc(e.status)}</td><td class="muted tiny">${esc(e.reason || "")}</td></tr>`).join("")
+          : `<tr><td colspan="6" class="muted">Không có tín hiệu MUA/BÁN trong kỳ.</td></tr>`;
+        const counts = Object.entries(j.status_counts || {}).map(([k, v]) => `${esc(k)}: ${v}`).join(" · ");
+        const op = j.open_position;
+        const dq = j.data_quality || {};
+        box.innerHTML = `
+      <div class="muted tiny">${esc(j.symbol)} · ${esc(j.start_date)} → ${esc(j.end_date)} · ${j.trading_sessions} phiên hợp lệ · trạng thái ${esc(j.status || "")}</div>
+      <div class="bt-metrics" style="margin-top:8px">
+        <div><span class="muted tiny">Lợi suất chiến lược (${label})</span><b class="${tone(j.strategy_return_pct)}">${val(j.strategy_return_pct, "%")}</b></div>
+        <div><span class="muted tiny">Lãi/lỗ ròng</span><b class="${tone(j.strategy_return_pct)}">${fmt((j.summary || [])[2]?.stockinsight, "VND")}</b></div>
+        <div><span class="muted tiny">Max Drawdown</span><b>${val(j.max_drawdown_pct, "%")}</b></div>
+        <div><span class="muted tiny">Số GD hoàn tất / Win rate</span><b>${j.trades} / ${j.win_rate_pct === null ? "N/A" : Number(j.win_rate_pct).toFixed(2) + "%"}</b></div>
+      </div>
+      <div class="table-wrap" style="margin-top:10px">
+        <table class="table">
+          <thead><tr><th>Chỉ tiêu</th><th>StockInsight</th><th>Buy &amp; Hold</th><th>VN-Index</th></tr></thead>
+          <tbody>${summaryRows}</tbody>
+        </table>
+      </div>
+      ${op ? `<div class="comment warn" style="margin-top:10px"><b>Vị thế chưa đóng:</b> ${op.quantity} cp mua ngày ${esc(op.entry_date)} giá ${money(op.entry_price)} VNĐ; giá trị cuối kỳ ${money(op.market_value)} VNĐ (${val(op.unrealized_return_pct, "%")}). ${esc(op.note)}</div>` : ""}
+      <div class="comment" style="margin-top:10px">${esc(j.method_note)}</div>
+      <details style="margin-top:10px">
+        <summary class="muted tiny" style="cursor:pointer">Giao dịch hoàn tất (${trades.length})</summary>
+        <div class="table-wrap" style="margin-top:8px"><table class="table">
+          <thead><tr><th>Ngày mua</th><th>Giá mua</th><th>Ngày bán</th><th>Giá bán</th><th>KL</th><th>Lợi suất ròng</th></tr></thead>
+          <tbody>${tradeRows}</tbody></table></div>
+      </details>
+      <details style="margin-top:6px">
+        <summary class="muted tiny" style="cursor:pointer">Nhật ký lệnh (${orders.length})</summary>
+        <div class="table-wrap" style="margin-top:8px"><table class="table">
+          <thead><tr><th>Ngày tín hiệu</th><th>Lệnh</th><th>Ngày khớp</th><th>Giá khớp</th><th>KL</th><th>Phí</th><th>Thuế bán</th><th>Dòng tiền ròng</th><th>Tiền sau GD</th></tr></thead>
+          <tbody>${orderRows}</tbody></table></div>
+      </details>
+      <details style="margin-top:6px">
+        <summary class="muted tiny" style="cursor:pointer">Tín hiệu MUA/BÁN và trạng thái xử lý (${notable.length})</summary>
+        <div class="muted tiny" style="margin-top:6px">${counts}</div>
+        <div class="table-wrap" style="margin-top:8px"><table class="table">
+          <thead><tr><th>Ngày</th><th>Tín hiệu</th><th>Điểm</th><th>Ngày khớp</th><th>Trạng thái</th><th>Lý do</th></tr></thead>
+          <tbody>${signalRows}</tbody></table></div>
+      </details>
+      <div class="muted tiny" style="margin-top:8px">Chất lượng dữ liệu: thiếu giá ${dq.missing_price_rows ?? 0} dòng · giá không hợp lệ ${dq.invalid_price_rows ?? 0} · trùng ngày ${dq.duplicate_dates ?? 0} · lệnh không khớp ${dq.unexecuted_orders ?? 0}${(dq.warnings || []).length ? " · " + (dq.warnings || []).map(esc).join(" ") : ""}</div>
+      <div class="muted tiny" style="margin-top:6px">${esc(j.limitation || "")}</div>`;
+      } catch (e) {
+        box.innerHTML = `<span class="down">${esc(e.message || "Không chạy được backtest.")}</span>`;
+      }
+    }
+
+    function setupValidation() {
+      const bPeers = $("valPeersBtn");
+      const bDefault = $("valDefaultBtn");
+      if (bPeers) bPeers.onclick = () => runValidation('peers');
+      if (bDefault) bDefault.onclick = () => runValidation('default');
+    }
+
+    async function runValidation(mode = 'peers') {
+      const box = $("validationResult");
+      if (!box) return;
+      const bPeers = $("valPeersBtn");
+      const bDefault = $("valDefaultBtn");
+      [bPeers, bDefault].forEach(b => { if (b) b.classList.remove('primary'); });
+      if (mode === 'peers' && bPeers) bPeers.classList.add('primary');
+      if (mode === 'default' && bDefault) bDefault.classList.add('primary');
+
+      box.innerHTML = '<span class="muted">⏳ Đang kiểm thử và so sánh 5 mã; thao tác có thể mất một lúc do giới hạn nguồn dữ liệu...</span>';
+      const curSymbol = (typeof D !== 'undefined' && D && D.symbol) ? D.symbol.toUpperCase() : "MWG";
+      let syms = "";
+
+      if (mode === 'peers') {
+        const SECTOR_GROUPS = [
+          { id: "bank", keywords: ["ngan hang", "bank", "tin dung"], peers: ["VCB", "MBB", "TCB", "ACB", "VPB", "CTG", "BID", "HDB"] },
+          { id: "securities", keywords: ["chung khoan", "securities", "tai chinh"], peers: ["SSI", "VND", "HCM", "VCI", "SHS", "MBS"] },
+          { id: "real_estate", keywords: ["bat dong san", "dia oc", "bds"], peers: ["VHM", "VIC", "VRE", "KDH", "NLG", "DXG", "PDR"] },
+          { id: "retail_distribution", keywords: ["ban le", "ban buon", "phan phoi", "thuong mai", "tieu dung"], peers: ["MWG", "FRT", "PNJ", "DGW", "PET", "MSN"] },
+          { id: "steel_materials", keywords: ["thep", "kim loai"], peers: ["HPG", "HSG", "NKG", "VGS"] },
+          { id: "construction_infra", keywords: ["xay dung", "ha tang", "vat lieu"], peers: ["CTD", "HBC", "VCG", "HHV", "HT1"] },
+          { id: "electrical_industrial", keywords: ["thiet bi", "dien", "cong nghiep"], peers: ["GEX", "REE", "PC1", "VGC", "CAV"] },
+          { id: "oil_gas_energy", keywords: ["dau khi", "xang dau", "nang luong"], peers: ["GAS", "PVD", "PVS", "BSR", "POW"] },
+          { id: "technology_telecom", keywords: ["cong nghe", "vien thong", "phan mem"], peers: ["FPT", "CTR", "CMG", "ELC"] },
+          { id: "chemicals_fertilizers", keywords: ["hoa chat", "phan bon", "cao su"], peers: ["DGC", "DPM", "DCM", "BFC", "GVR"] },
+          { id: "logistics_shipping", keywords: ["van tai", "cang bien", "logistics"], peers: ["GMD", "HAH", "VSC", "PVT"] },
+          { id: "food_agriculture", keywords: ["thuy san", "thuc pham", "nong nghiep"], peers: ["VHC", "ANV", "BAF", "DBC"] },
+          { id: "plastics_packaging", keywords: ["nhua", "bao bi"], peers: ["BMP", "NTP", "AAA", "DNP"] }
+        ];
+
+        const rawIndustry = ((D && D.industry) || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        let matched = SECTOR_GROUPS.find(g => g.peers.includes(curSymbol));
+        if (!matched) {
+          matched = SECTOR_GROUPS.find(g =>
+            g.keywords.some(kw => rawIndustry.includes(kw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+          );
+        }
+        if (matched) {
+          const otherPeers = matched.peers.filter(p => p !== curSymbol);
+          syms = [curSymbol, ...otherPeers.slice(0, 4)].join(",");
+        } else {
+          syms = [curSymbol, "FPT", "MWG", "HPG", "VCB"].slice(0, 5).join(",");
+        }
+      } else {
+        syms = Array.from(new Set([curSymbol, "FPT", "VCB", "HPG", "MWG"])).slice(0, 5).join(",");
+      }
+
+      try {
+        const r = await fetch(`/api/validate?symbols=${encodeURIComponent(syms)}`);
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.message || j.error || "Lỗi kiểm thử");
+
+        const rows = (j.rows || []).map(x => {
+          if (x.status !== "OK") {
+            return `<tr><td><b>${esc(x.symbol)}</b></td><td colspan="8" class="down">${esc(x.error || "Lỗi tải dữ liệu")}</td></tr>`;
+          }
+          const isCur = x.symbol === curSymbol;
+          const rowStyle = isCur ? 'style="background:rgba(41,98,255,0.08);font-weight:bold"' : '';
+          return `
+        <tr ${rowStyle}>
+          <td><b>${esc(x.symbol)}</b> ${isCur ? '<span class="pill" style="font-size:10px">Hiện tại</span>' : ''}</td>
+          <td>${esc(x.industry || x.company_type || "—")}</td>
+          <td>${x.fundamental_score ?? "N/A"}</td>
+          <td>${x.technical_score ?? "N/A"}</td>
+          <td><b>${x.total_score ?? "N/A"}</b></td>
+          <td>${x.coverage_pct ?? "N/A"}%</td>
+          <td>${esc(x.signal || "")}</td>
+          <td>${esc(x.risk || "")}</td>
+          <td>${esc(x.latest_price_date || "")} / ${esc(x.latest_financial_period || "")}</td>
+        </tr>
+      `;
+        }).join("");
+
+        box.innerHTML = `
+      <div style="overflow-x:auto">
+        <table class="table" style="width:100%;text-align:left;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th>Mã</th><th>Ngành/Nhóm</th><th>Điểm F (Cơ bản)</th><th>Điểm T (Kỹ thuật)</th><th>Điểm Tổng</th><th>Độ phủ</th><th>Tín hiệu</th><th>Rủi ro</th><th>Ngày giá / kỳ BCTC</th>
+            </tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="9" class="muted">Không có dữ liệu đối chiếu.</td></tr>'}</tbody>
+        </table>
+      </div>`;
+      } catch (e) {
+        box.innerHTML = `<span class="down">${esc(e.message || "Không chạy được kiểm thử.")}</span>`;
+      }
+    }
+
+    // Khởi chạy giao diện
+    render();
+
+    $("chatToggle").onclick = () => $("chatPanel").classList.toggle("open");
+    async function sendChat() {
+      if (!D || !D.symbol) return;
+      const q = $("chatInput").value.trim();
+      if (!q) return;
+      const body = $("chatBody");
+      body.insertAdjacentHTML("beforeend", `<div class="msg user">${esc(q)}</div>`);
+      $("chatInput").value = "";
+      const wait = document.createElement("div");
+      wait.className = "msg bot";
+      wait.textContent = "Đang phân tích...";
+      body.appendChild(wait);
+      body.scrollTop = body.scrollHeight;
+      try {
+        const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: D.symbol, question: q }) });
+        const j = await r.json();
+        wait.textContent = j.answer || j.error || "Không có phản hồi.";
+      } catch (e) {
+        wait.textContent = "Không kết nối được chatbot.";
+      }
+      body.scrollTop = body.scrollHeight;
+    }
+    $("chatSend").onclick = sendChat;
+    $("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") sendChat() });
+  </script>
+</body>
+
+</html>

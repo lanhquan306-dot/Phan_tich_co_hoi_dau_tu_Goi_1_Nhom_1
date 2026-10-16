@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>__TITLE__</title>
+__TG_SCRIPT__
+<style>
+:root{
+  --bg:#131722; --panel:#1b1f2b; --line:#2a2e39; --grid:#1f2433;
+  --text:#d1d4dc; --muted:#8a8e99; --faint:#5d606b;
+  --up:#26a69a; --down:#ef5350; --flat:#f7c948;
+  --ma20:#f7c948; --ma50:#2962ff; --ma150:#e040fb; --rsi:#b39ddb; --accent:#2962ff;
+  --tip:#1e222dF2;
+}
+:root[data-theme="light"]{
+  --bg:#ffffff; --panel:#f5f6f8; --line:#e0e3eb; --grid:#f0f3fa;
+  --text:#131722; --muted:#6a6d78; --faint:#9598a1;
+  --up:#089981; --down:#f23645; --flat:#c89a00;
+  --ma20:#c89a00; --ma50:#2962ff; --ma150:#9c27b0; --rsi:#7e57c2;
+  --tip:#ffffffF2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;padding:14px 16px 8px}
+.sym{font-size:22px;font-weight:700;letter-spacing:.2px}
+.name{color:var(--muted);font-size:13px;max-width:42ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.price{display:flex;align-items:baseline;gap:10px}
+.last{font-size:22px;font-weight:700}
+.chg{font-weight:600}
+.meta{color:var(--faint);font-size:12px;margin-left:auto}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:4px 16px 10px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px}
+.seg button{background:none;border:0;padding:5px 11px;border-radius:4px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.chips{display:inline-flex;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+.chip i{width:10px;height:3px;border-radius:2px;display:inline-block}
+.chip[aria-pressed="true"]{color:var(--text);border-color:var(--faint)}
+.chip[aria-pressed="false"] i{opacity:.3}
+.tools{display:inline-flex;gap:6px;margin-left:auto}
+.search{display:none;gap:6px}
+.server .search{display:inline-flex}
+.search input{width:92px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 9px;text-transform:uppercase}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.wrap{position:relative;height:clamp(420px,calc(100vh - 210px),820px);margin:0 4px}
+#chart{position:absolute;inset:0}
+.legend{position:absolute;left:10px;top:6px;z-index:3;pointer-events:none;font-size:12px;line-height:1.6;
+  display:flex;flex-wrap:wrap;gap:0 12px;max-width:calc(100% - 90px)}
+.legend b{font-weight:600}
+.legend .k{color:var(--muted);margin-right:3px}
+
+.tip{position:absolute;top:34px;z-index:4;width:238px;pointer-events:none;display:none;
+  background:var(--tip);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);backdrop-filter:blur(6px);font-size:12.5px}
+.tip h4{margin:0 0 6px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.tip h4 span{font-weight:600}
+.tip dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0}
+.tip dt{color:var(--muted)}
+.tip dd{margin:0;text-align:right;font-weight:600}
+.tip hr{border:0;border-top:1px solid var(--line);margin:6px 0;grid-column:1/-1;width:100%}
+.zone{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--panel);color:var(--muted);margin-left:4px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:6px}
+.stat{background:var(--bg);padding:10px 16px}
+.stat small{display:block;color:var(--muted);font-size:12px}
+.stat strong{font-size:15px}
+footer{color:var(--faint);font-size:12px;padding:12px 16px 20px;max-width:80ch}
+@media (max-width:640px){
+  .top{padding:10px 12px 6px}.bar{padding:4px 12px 8px}.meta{margin-left:0;width:100%}
+  .sym,.last{font-size:19px}.tools{margin-left:0}
+  .wrap{height:clamp(380px,calc(100vh - 250px),640px)}
+  .tip{top:4px;left:4px!important;right:62px;width:auto;padding:8px 10px;font-size:11.5px}
+  .tip h4{margin-bottom:4px}
+  .tip dl{grid-template-columns:auto 1fr auto 1fr;gap:1px 8px}
+  .tip hr{margin:3px 0}
+  .hovering .legend{visibility:hidden}
+  .tip .dist,.tip .zone{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="sym" id="sym"></span>
+  <span class="price"><span class="last" id="last"></span><span class="chg" id="chg"></span></span>
+  <span class="name" id="name"></span>
+  <span class="meta" id="meta"></span>
+</header>
+
+<nav class="bar" aria-label="Điều khiển biểu đồ">
+  <div class="seg" id="periods" role="group" aria-label="Khoảng thời gian">
+    <button data-p="1M">1T</button><button data-p="3M">3T</button><button data-p="6M">6T</button>
+    <button data-p="1Y">1N</button><button data-p="ALL">Tất cả</button>
+  </div>
+  <div class="chips" role="group" aria-label="Đường trung bình">
+    <button class="chip" data-ma="ma20" aria-pressed="true"><i style="background:var(--ma20)"></i>MA20</button>
+    <button class="chip" data-ma="ma50" aria-pressed="true"><i style="background:var(--ma50)"></i>MA50</button>
+    <button class="chip" data-ma="ma150" aria-pressed="true"><i style="background:var(--ma150)"></i>MA150</button>
+  </div>
+  <div class="tools">
+    <div class="search"><input id="q" maxlength="10" placeholder="Mã" aria-label="Nhập mã cổ phiếu"><button class="btn primary" id="go">Xem</button></div>
+    <button class="btn" id="theme" aria-label="Đổi giao diện sáng/tối">☀︎</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div id="chart"></div>
+  <div class="legend" id="legend"></div>
+  <div class="tip" id="tip" role="status" aria-live="off"></div>
+</div>
+
+<section class="stats" id="stats"></section>
+
+<footer id="foot"></footer>
+
+<script>__LWC_JS__</script>
+<script>
+(function(){
+"use strict";
+const D = __DATA_JSON__;
+const LW = window.LightweightCharts;
+const $ = id => document.getElementById(id);
+const n = D.t.length;
+const BARS = {"1M":22,"3M":66,"6M":126,"1Y":252,"ALL":null};
+const WD = ["CN","T2","T3","T4","T5","T6","T7"];
+
+if (D.server_mode) document.body.classList.add("server");
+try { const tg = window.Telegram && window.Telegram.WebApp; if (tg) { tg.ready(); tg.expand(); } } catch(e) {}
+
+/* ---------- format ---------- */
+const num = v => (v === null || v === undefined || !isFinite(v)) ? null : v;
+const fp = v => num(v) === null ? "—" : Math.round(v).toLocaleString("en-US");
+const fpc = (v, d=2) => num(v) === null ? "—" : (v > 0 ? "+" : "") + v.toFixed(d) + "%";
+const fvol = v => {
+  if (num(v) === null) return "—";
+  const a = Math.abs(v);
+  if (a >= 1e9) return (v/1e9).toFixed(2) + " tỷ";
+  if (a >= 1e6) return (v/1e6).toFixed(2) + " tr";
+  if (a >= 1e3) return (v/1e3).toFixed(1) + "K";
+  return String(Math.round(v));
+};
+const fmoney = v => {
+  if (num(v) === null) return "—";
+  const a = Math.abs(v);
+  if (a >= 1e12) return (v/1e12).toFixed(2) + " nghìn tỷ";
+  if (a >= 1e9) return (v/1e9).toFixed(1) + " tỷ";
+  if (a >= 1e6) return (v/1e6).toFixed(1) + " triệu";
+  return Math.round(v).toLocaleString("en-US");
+};
+const cls = v => num(v) === null || v === 0 ? "flat" : (v > 0 ? "up" : "down");
+const dateLabel = s => { const [y,m,d] = s.split("-").map(Number); const w = new Date(Date.UTC(y,m-1,d)).getUTCDay();
+  return WD[w] + ", " + String(d).padStart(2,"0") + "/" + String(m).padStart(2,"0") + "/" + y; };
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rsiZone = r => num(r) === null ? "" : (r >= D.rsi_high ? "quá mua" : (r <= D.rsi_low ? "quá bán" : "trung tính"));
+
+function bar(i){
+  const pc = i > 0 ? D.c[i-1] : null;
+  const chg = pc ? D.c[i] - pc : null;
+  return {
+    t: D.t[i], o: D.o[i], h: D.h[i], l: D.l[i], c: D.c[i], v: D.v[i],
+    chg, pct: pc ? chg / pc * 100 : null,
+    amp: pc ? (D.h[i] - D.l[i]) / pc * 100 : null,
+    val: D.c[i] * D.v[i], vma: D.vma20[i],
+    ma20: D.ma20[i], ma50: D.ma50[i], ma150: D.ma150[i], rsi: D.rsi[i]
+  };
+}
+
+/* ---------- theme ---------- */
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+let theme = "dark";
+try { theme = localStorage.getItem("fintech-chart-theme") || "dark"; } catch(e) {}
+document.documentElement.dataset.theme = theme;
+
+/* ---------- chart ---------- */
+const chart = LW.createChart($("chart"), {
+  autoSize: true,
+  layout: { attributionLogo: true, fontSize: 11,
+            fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif',
+            panes: { enableResize: true } },
+  crosshair: { mode: LW.CrosshairMode.Normal },
+  rightPriceScale: { scaleMargins: { top: 0.12, bottom: 0.06 } },
+  timeScale: { rightOffset: 4, barSpacing: 7, minBarSpacing: 1.5 },
+  localization: { locale: "vi-VN", dateFormat: "dd/MM/yyyy" },
+});
+
+const priceFmt = { type: "custom", minMove: 1, formatter: p => Math.round(p).toLocaleString("en-US") };
+const candle = chart.addSeries(LW.CandlestickSeries, { priceFormat: priceFmt, borderVisible: false }, 0);
+const maSeries = {};
+for (const k of ["ma20","ma50","ma150"]) {
+  maSeries[k] = chart.addSeries(LW.LineSeries, {
+    lineWidth: 1.5, priceFormat: priceFmt, priceLineVisible: false, lastValueVisible: false,
+    crosshairMarkerVisible: false
+  }, 0);
+}
+const volume = chart.addSeries(LW.HistogramSeries, {
+  priceFormat: { type: "custom", minMove: 1, formatter: v => fvol(v) }, priceLineVisible: false, lastValueVisible: true
+}, 1);
+const volMa = chart.addSeries(LW.LineSeries, {
+  lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+  priceFormat: { type: "custom", minMove: 1, formatter: v => fvol(v) }
+}, 1);
+const rsi = chart.addSeries(LW.LineSeries, {
+  lineWidth: 1.5, priceLineVisible: false, lastValueVisible: true,
+  priceFormat: { type: "price", precision: 1, minMove: 0.1 },
+  autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } })
+}, 2);
+const rsiLines = [D.rsi_high, 50, D.rsi_low].map(p => rsi.createPriceLine({
+  price: p, lineWidth: 1, lineStyle: LW.LineStyle.Dashed, axisLabelVisible: p !== 50, title: ""
+}));
+
+const line = arr => D.t.map((t,i) => num(arr[i]) === null ? { time: t } : { time: t, value: arr[i] });
+candle.setData(D.t.map((t,i) => ({ time: t, open: D.o[i], high: D.h[i], low: D.l[i], close: D.c[i] })));
+maSeries.ma20.setData(line(D.ma20)); maSeries.ma50.setData(line(D.ma50)); maSeries.ma150.setData(line(D.ma150));
+volMa.setData(line(D.vma20));
+rsi.setData(line(D.rsi));
+
+try {
+  const panes = chart.panes();
+  panes[0].setStretchFactor(3.2); panes[1].setStretchFactor(1); panes[2].setStretchFactor(1);
+} catch(e) {}
+
+function applyTheme(){
+  document.documentElement.dataset.theme = theme;
+  $("theme").textContent = theme === "dark" ? "☀︎" : "☾";
+  const up = css("--up"), down = css("--down");
+  chart.applyOptions({
+    layout: { background: { type: "solid", color: css("--bg") }, textColor: css("--muted"),
+              panes: { separatorColor: css("--line"), separatorHoverColor: css("--faint") } },
+    grid: { vertLines: { color: css("--grid") }, horzLines: { color: css("--grid") } },
+    rightPriceScale: { borderColor: css("--line") },
+    timeScale: { borderColor: css("--line") },
+    crosshair: { vertLine: { color: css("--faint"), labelBackgroundColor: css("--panel") },
+                 horzLine: { color: css("--faint"), labelBackgroundColor: css("--panel") } },
+  });
+  candle.applyOptions({ upColor: up, downColor: down, wickUpColor: up, wickDownColor: down });
+  for (const k in maSeries) maSeries[k].applyOptions({ color: css("--" + k) });
+  volMa.applyOptions({ color: "#ff9800" });
+  rsi.applyOptions({ color: css("--rsi") });
+  rsiLines.forEach((pl, idx) => pl.applyOptions({ color: idx === 1 ? css("--line") : css("--faint") }));
+  const upA = up + "b3", downA = down + "b3";
+  volume.setData(D.t.map((t,i) => ({ time: t, value: D.v[i] || 0,
+    color: (D.c[i] >= D.o[i]) ? upA : downA })));
+}
+applyTheme();
+$("theme").addEventListener("click", () => {
+  theme = theme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("fintech-chart-theme", theme); } catch(e) {}
+  applyTheme(); renderLegend(n - 1);
+});
+
+/* ---------- header / stats ---------- */
+(function header(){
+  const b = bar(n - 1);
+  $("sym").textContent = D.symbol;
+  $("name").textContent = [D.exchange, D.name].filter(Boolean).join("  ");
+  $("last").textContent = fp(b.c);
+  $("last").className = "last " + cls(b.chg);
+  $("chg").textContent = (b.chg === null ? "" : (b.chg > 0 ? "+" : "") + fp(b.chg)) + "  " + fpc(b.pct);
+  $("chg").className = "chg " + cls(b.chg);
+  const bits = ["Khung ngày", "Phiên " + dateLabel(b.t)];
+  if (D.live_bar) bits.push("nến đang chạy");
+  if (D.source) bits.push("nguồn " + D.source);
+  if (D.stale) bits.push("⚠ dữ liệu cache cũ");
+  $("meta").textContent = bits.join(", ");
+  document.title = D.symbol + " " + fp(b.c) + " (" + fpc(b.pct) + ")";
+
+  const S = D.stats;
+  const cards = [
+    ["Cao nhất 52 tuần", fp(S.high_52w), ""],
+    ["Thấp nhất 52 tuần", fp(S.low_52w), ""],
+    ["KL trung bình 20 phiên", fvol(S.vol_ma20), ""],
+    ["KL phiên cuối so với TB20", num(S.vol_ratio) === null ? "—" : S.vol_ratio.toFixed(2) + " lần", ""],
+    ["Giá so với MA20", fpc(S.dist_ma20), cls(S.dist_ma20)],
+    ["Giá so với MA50", fpc(S.dist_ma50), cls(S.dist_ma50)],
+    ["Giá so với MA150", fpc(S.dist_ma150), cls(S.dist_ma150)],
+    ["RSI14", num(S.rsi14) === null ? "—" : S.rsi14.toFixed(1) + " (" + rsiZone(S.rsi14) + ")", ""],
+  ];
+  $("stats").innerHTML = cards.map(([k,v,c]) =>
+    `<div class="stat"><small>${esc(k)}</small><strong class="${c}">${esc(v)}</strong></div>`).join("");
+  $("foot").innerHTML = "Biểu đồ chỉ trực quan hóa dữ liệu giá, khối lượng, MA20/50/150 và RSI14 (ngưỡng "
+    + D.rsi_low + "/" + D.rsi_high + "). Không phải tín hiệu mua/bán. Tạo lúc " + esc(D.generated_at)
+    + ". Thư viện biểu đồ: TradingView Lightweight Charts™ (Apache-2.0).";
+})();
+
+/* ---------- legend (luôn hiện) + tooltip (khi rê chuột) ---------- */
+function renderLegend(i){
+  const b = bar(i);
+  const c = cls(b.chg);
+  const ma = (k, label) => `<span><span class="k" style="color:${css("--" + k)}">${label}</span><b>${fp(b[k])}</b></span>`;
+  $("legend").innerHTML =
+    `<span><span class="k">O</span><b class="${c}">${fp(b.o)}</b></span>` +
+    `<span><span class="k">H</span><b class="${c}">${fp(b.h)}</b></span>` +
+    `<span><span class="k">L</span><b class="${c}">${fp(b.l)}</b></span>` +
+    `<span><span class="k">C</span><b class="${c}">${fp(b.c)}</b></span>` +
+    `<span><b class="${c}">${fpc(b.pct)}</b></span>` +
+    ma("ma20","MA20") + ma("ma50","MA50") + ma("ma150","MA150");
+}
+
+function renderTip(i, x){
+  const b = bar(i);
+  const c = cls(b.chg);
+  const dist = k => num(b[k]) === null ? "" : ` <span class="dist ${cls(b.c - b[k])}">(${fpc((b.c / b[k] - 1) * 100, 1)})</span>`;
+  const volRatio = num(b.vma) ? (b.v / b.vma).toFixed(2) + "× TB20" : "—";
+  const tip = $("tip");
+  tip.innerHTML = `
+    <h4>${dateLabel(b.t)}<span class="${c}">${fpc(b.pct)}</span></h4>
+    <dl>
+      <dt>Mở cửa</dt><dd>${fp(b.o)}</dd>
+      <dt>Cao nhất</dt><dd class="up">${fp(b.h)}</dd>
+      <dt>Thấp nhất</dt><dd class="down">${fp(b.l)}</dd>
+      <dt>Đóng cửa</dt><dd class="${c}">${fp(b.c)}</dd>
+      <dt>Thay đổi</dt><dd class="${c}">${b.chg === null ? "—" : (b.chg > 0 ? "+" : "") + fp(b.chg)}</dd>
+      <dt>Biên độ</dt><dd>${fpc(b.amp).replace("+","")}</dd>
+      <hr>
+      <dt>Khối lượng</dt><dd>${fvol(b.v)}</dd>
+      <dt>So với TB20</dt><dd>${volRatio}</dd>
+      <dt>Giá trị GD</dt><dd>${fmoney(b.val)}</dd>
+      <hr>
+      <dt style="color:${css("--ma20")}">MA20</dt><dd>${fp(b.ma20)}${dist("ma20")}</dd>
+      <dt style="color:${css("--ma50")}">MA50</dt><dd>${fp(b.ma50)}${dist("ma50")}</dd>
+      <dt style="color:${css("--ma150")}">MA150</dt><dd>${fp(b.ma150)}${dist("ma150")}</dd>
+      <dt style="color:${css("--rsi")}">RSI14</dt><dd>${num(b.rsi) === null ? "—" : b.rsi.toFixed(1)}<span class="zone">${rsiZone(b.rsi)}</span></dd>
+    </dl>`;
+  const wrap = tip.parentElement.getBoundingClientRect();
+  const w = tip.offsetWidth || 238;
+  const gap = 18;
+  let left = x + gap;
+  if (left + w > wrap.width - 70) left = x - w - gap;   // lật sang trái khi sát mép phải
+  if (left < 6) left = 6;
+  tip.style.left = left + "px";
+  tip.style.display = "block";
+}
+
+chart.subscribeCrosshairMove(p => {
+  const i = p && p.logical !== undefined && p.logical !== null ? Math.round(p.logical) : -1;
+  if (!p || !p.point || !p.time || i < 0 || i >= n) {
+    $("tip").style.display = "none";
+    document.body.classList.remove("hovering");
+    renderLegend(n - 1);
+    return;
+  }
+  document.body.classList.add("hovering");
+  renderLegend(i);
+  renderTip(i, p.point.x);
+});
+$("chart").addEventListener("mouseleave", () => {
+  $("tip").style.display = "none"; document.body.classList.remove("hovering"); renderLegend(n - 1);
+});
+renderLegend(n - 1);
+
+/* ---------- period ---------- */
+function setPeriod(key){
+  document.querySelectorAll("#periods button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.p === key)));
+  const bars = BARS[key];
+  if (!bars || bars >= n) chart.timeScale().fitContent();
+  else chart.timeScale().setVisibleLogicalRange({ from: n - bars - 0.5, to: n - 1 + 4 });
+  try { const u = new URL(location.href); u.searchParams.set("p", key); history.replaceState(null, "", u); } catch(e) {}
+}
+document.querySelectorAll("#periods button").forEach(b => b.addEventListener("click", () => setPeriod(b.dataset.p)));
+let initial = D.period;
+try { const qp = new URL(location.href).searchParams.get("p"); if (qp && qp.toUpperCase() in BARS) initial = qp.toUpperCase(); } catch(e) {}
+setPeriod(initial in BARS ? initial : "6M");
+
+/* ---------- MA toggles ---------- */
+document.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
+  const on = ch.getAttribute("aria-pressed") !== "true";
+  ch.setAttribute("aria-pressed", String(on));
+  maSeries[ch.dataset.ma].applyOptions({ visible: on });
+}));
+
+/* ---------- search (chỉ khi chạy qua web server) ---------- */
+function go(){
+  const s = ($("q").value || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const cur = document.querySelector('#periods button[aria-pressed="true"]');
+  if (s) location.href = "/chart/" + s + "?p=" + (cur ? cur.dataset.p : "6M");
+}
+$("go").addEventListener("click", go);
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+})();
+</script>
+</body>
+</html>
